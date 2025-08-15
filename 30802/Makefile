@@ -1,7 +1,7 @@
-CC = g++
-CFLAGS = -std=c++17 -O1 -Wall
-TARGET = 31802.out
-SOURCE = 31802.cpp
+CC = gcc
+CFLAGS = -std=c99 -O1 -Wall
+TARGET = 30802.out
+SOURCE = 30802.c
 
 $(TARGET): $(SOURCE)
 	$(CC) $(CFLAGS) -o $(TARGET) $(SOURCE)
