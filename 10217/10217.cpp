@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <climits>
 #include <iostream>
-#include <map>
 #include <queue>
 #include <sstream>
 #include <string>
@@ -76,7 +75,7 @@ int main() {
       std::sort(j.begin(), j.end(), std::less<Route>());
     }
 
-    std::vector<std::map<int, int>> dp(N + 1);
+    std::vector<std::vector<int>> dp(N + 1, std::vector<int>(M + 1, INF));
     std::priority_queue<Route, std::vector<Route>, std::greater<Route>> pq;
     pq.push(Route(1, 0, 0));
 
