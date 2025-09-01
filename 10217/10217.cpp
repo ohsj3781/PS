@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <climits>
 #include <iostream>
-#include <queue>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -21,17 +20,9 @@ struct Route {
     this->d = r.d;
     return *this;
   }
-  const bool operator<(const Route& r) const {
-    return this->d != r.d   ? this->d < r.d
-           : this->c != r.c ? this->c < r.c
-                            : this->v > r.v;
-  }
+  const bool operator<(const Route& r) const { return this->c < r.c; }
 
-  const bool operator>(const Route& r) const {
-    return this->d != r.d   ? this->d > r.d
-           : this->c != r.c ? this->c > r.c
-                            : this->v < r.v;
-  }
+  const bool operator>(const Route& r) const { return this->c > r.c; }
 };
 
 std::istream& operator>>(std::istream& is, Route& r) {
@@ -56,7 +47,7 @@ int main() {
     std::cin >> N >> M >> K;
     std::cin.ignore();
 
-    std::vector<std::vector<Route>> routes(N + 1);
+    std::vector<std::vector<Route>> routes(N);
     std::string input;
     std::stringstream buffer;
     for (int j = 0; j < K; ++j) {
@@ -67,42 +58,42 @@ int main() {
       Route temp_route;
       buffer >> u >> temp_route;
       buffer.clear();
-
-      routes[u].push_back(temp_route);
+      temp_route.v -= 1;
+      routes[u - 1].push_back(temp_route);
     }
 
     for (auto& j : routes) {
       std::sort(j.begin(), j.end(), std::less<Route>());
     }
 
-    std::vector<std::vector<int>> dp(N + 1, std::vector<int>(M + 1, INF));
-    std::priority_queue<Route, std::vector<Route>, std::greater<Route>> pq;
-    pq.push(Route(1, 0, 0));
+    std::vector<std::vector<int>> dp(N, std::vector<int>(M + 1, INF));
+    dp[0][0] = 0;
 
-    while (!pq.empty() && pq.top().v != N) {
-      Route now_r(pq.top());
-      //   std::cout << "now_r : " << now_r << "\n";
-      pq.pop();
-
-      for (auto& j : routes[now_r.v]) {
-        Route new_r(j.v, now_r.c + j.c, now_r.d + j.d);
-        if (new_r.c > M || dp[new_r.v][new_r.c] <= new_r.d) {
+    for (int i = 0; i <= M; ++i) {
+      for (int j = 0; j < N; ++j) {
+        if (dp[j][i] == INF) {
           continue;
         }
-        pq.push(new_r);
-        for (int k = new_r.c; k < dp[now_r.v].size(); ++k) {
-          if (dp[new_r.v][k] < new_r.d) {
+        for (auto& route : routes[j]) {
+          const Route new_route(route.v, route.c + i, route.d + dp[j][i]);
+          if (new_route.c > M) {
             break;
           }
-          dp[new_r.v][k] = new_r.d;
+          dp[new_route.v][new_route.c] =
+              std::min(dp[new_route.v][new_route.c], new_route.d);
         }
       }
     }
 
-    if (pq.empty()) {
+    int ans = INF;
+    for (auto i : dp.back()) {
+      ans = std::min(ans, i);
+    }
+
+    if (ans == INF) {
       std::cout << "Poor KCM\n";
     } else {
-      std::cout << pq.top().d << "\n";
+      std::cout << ans << "\n";
     }
   }
 
