@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <iostream>
 #include <utility>
 #include <vector>
@@ -11,53 +10,24 @@ const int ConvertToDiagonal1(const int i, const int j) { return i + j; }
 
 const int ConvertToDiagonal2(const int i, const int j) { return n - 1 - i + j; }
 
-const int FindMaximumBishop0(std::vector<std::pair<int, int>>::iterator iter) {
-  static int ans = 0;
-  static int cnt_bishop = 0;
-  if (positions.front().end() == iter) {
-    return ans = std::max(ans, cnt_bishop);
+const int FindMaximumBishop(
+    std::vector<std::pair<int, int>>::iterator iter,
+    const std::vector<std::pair<int, int>>::const_iterator& iter_end,
+    const int cnt_bishop = 0) {
+  if (iter_end == iter) {
+    return cnt_bishop;
   }
+
+  int ans = 0;
 
   if (diagonal_1[iter->first] && diagonal_2[iter->second]) {
-    ++cnt_bishop;
-    diagonal_1[iter->first] = false;
-    diagonal_2[iter->second] = false;
-
-    FindMaximumBishop0(iter + 1);
-
-    --cnt_bishop;
-    diagonal_1[iter->first] = true;
-    diagonal_2[iter->second] = true;
-  }
-
-  FindMaximumBishop0(iter + 1);
-
-  return ans;
-}
-
-const int FindMaximumBishop1(std::vector<std::pair<int, int>>::iterator iter) {
-  static int ans = 0;
-  static int cnt_bishop = 0;
-  if (positions.back().end() == iter) {
-    ans = std::max(ans, cnt_bishop);
-    return ans;
-  }
-
-  if (diagonal_1[iter->first] && diagonal_2[iter->second]) {
-    ++cnt_bishop;
     diagonal_1[iter->first] = diagonal_2[iter->second] = false;
-
-    FindMaximumBishop1(iter + 1);
-
-    --cnt_bishop;
+    ans = FindMaximumBishop(iter + 1, iter_end, cnt_bishop + 1);
     diagonal_1[iter->first] = diagonal_2[iter->second] = true;
   }
 
-  FindMaximumBishop1(iter + 1);
-
-  return ans;
+  return std::max(ans, FindMaximumBishop(iter + 1, iter_end, cnt_bishop));
 }
-
 int main() {
   std::ios::sync_with_stdio(false);
   std::cin.tie(nullptr), std::cout.tie(nullptr);
@@ -79,8 +49,10 @@ int main() {
   diagonal_1.assign(2 * n - 1, true);
   diagonal_2.assign(2 * n - 1, true);
 
-  std::cout << FindMaximumBishop0(positions.front().begin()) +
-                   FindMaximumBishop1(positions.back().begin());
+  std::cout << FindMaximumBishop(positions.front().begin(),
+                                 positions.front().end()) +
+                   FindMaximumBishop(positions.back().begin(),
+                                     positions.back().end());
 
   return 0;
 }
