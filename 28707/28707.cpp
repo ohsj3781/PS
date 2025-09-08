@@ -6,20 +6,21 @@
 #include <vector>
 
 int N;
-constexpr int BASE = 10;
-constexpr int BASES[BASE] = {1,           10,           100,       1'000,
-                             10'000,      100'000,      1'000'000, 10'000'000,
-                             100'000'000, 1'000'000'000};
+
+constexpr int MASK = 15;
+constexpr int SHIFT = 4;
+
 struct Inst {
   int l;
   int r;
   int c;
 
-  const int Execute(int num) const {
-    int l_value = num / BASES[N - l] % BASE;
-    int r_value = num / BASES[N - r] % BASE;
-    num -= l_value * BASES[N - l] + r_value * BASES[N - r];
-    num += l_value * BASES[N - r] + r_value * BASES[N - l];
+  const int Execute(long long num) const {
+    // long long l_value = num / BASES[N - l] % BASE;
+    long long l_value = (num >> SHIFT * (N - l)) & MASK;
+    long long r_value = (num >> SHIFT * (N - r)) & MASK;
+    num -= (l_value << SHIFT * (N - l)) + (r_value << SHIFT * (N - r));
+    num += (l_value << SHIFT * (N - r)) + (r_value << SHIFT * (N - l));
     return num;
   }
 };
@@ -32,7 +33,8 @@ std::istream& operator>>(std::istream& is, Inst& i) {
 const int VectorToInt(const std::vector<int>& v) {
   int value = 0;
   for (int i = 0; i < v.size(); ++i) {
-    value += v[i] * BASES[N - i - 1];
+    value <<= SHIFT;
+    value += v[i];
   }
   return value;
 }
@@ -58,9 +60,10 @@ int main() {
   }
 
   // m.first = vector, m.second = cost
-  std::unordered_map<int, int> m;
-  std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>,
-                      std::greater<std::pair<int, int>>>
+  std::unordered_map<long long, int> m;
+  std::priority_queue<std::pair<int, long long>,
+                      std::vector<std::pair<int, long long>>,
+                      std::greater<std::pair<int, long long>>>
       pq;
   pq.push({0, VectorToInt(v)});
   m[VectorToInt(v)] = 0;
