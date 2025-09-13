@@ -4,4 +4,4 @@
 *.obj
 *.pdb
 *.out
-Makefile
+*/Makefile
