@@ -13,37 +13,31 @@ int main() {
       break;
     }
 
-    std::vector<int> heights(n);
-    for (int i = 0; i < heights.size(); ++i) {
-      std::cin >> heights[i];
-    }
-
-    std::vector<std::pair<int, int>> range(n);
-    for (int i = 0; i < range.size(); ++i) {
-      range[i] = {i, i};
-    }
-
     long long ans = 0;
-    for (int i = 0; i < range.size(); ++i) {
-      if (heights[i] == 0) {
+
+    // first is height, second is left index
+    std::stack<std::pair<int, int>> stk;
+    for (int i = 0; i < n; ++i) {
+      int height;
+      std::cin >> height;
+      std::pair<int, int> temp(height, i);
+
+      while (!stk.empty() && stk.top().first > temp.first) {
+        ans = std::max(ans, static_cast<long long>(i - stk.top().second) *
+                                stk.top().first);
+        temp.second = stk.top().second;
+        stk.pop();
+      }
+      if (!stk.empty() && stk.top().first == temp.first) {
         continue;
       }
-
-      while (range[i].first - 1 >= 0 &&
-             heights[i] <= heights[range[i].first - 1]) {
-        range[i].first = range[range[i].first - 1].first;
-      }
+      stk.push(temp);
     }
 
-    for (int i = range.size() - 1; i >= 0; --i) {
-      while (range[i].second + 1 < heights.size() &&
-             heights[i] <= heights[range[i].second + 1]) {
-        range[i].second = range[range[i].second + 1].second;
-      }
-
+    while (!stk.empty()) {
       ans = std::max(
-          ans, static_cast<long long>(range[i].second - range[i].first + 1) *
-                   heights[i]);
+          ans, static_cast<long long>(n - stk.top().second) * stk.top().first);
+      stk.pop();
     }
 
     std::cout << ans << "\n";
