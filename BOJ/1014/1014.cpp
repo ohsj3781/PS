@@ -15,32 +15,31 @@ const bool ValidArrange(const int num, const int first) {
       return false;
     }
 
-    for (int j = std::max(0, i - 1); j <= std::min(M - 1, i + 1); ++j) {
-      if (i == j) {
-        continue;
-      }
-      if ((num >> j) & 1) {
-        return false;
-      }
+    int shift = std::min(M - 1, i + 1);
+    if (shift == i) {
+      continue;
+    }
+
+    if ((num >> shift) & 1) {
+      return false;
     }
   }
   return true;
 }
 
-const bool ValidLastArrange(const int now, const int before) {
+const int MakeValidMask(const int now) {
+  int mask = 0;
   for (int i = 0; i < M; ++i) {
     if ((now >> i) & 1) {
       for (int j = std::max(0, i - 1); j <= std::min(M - 1, i + 1); ++j) {
         if (i == j) {
           continue;
         }
-        if ((before >> j) & 1) {
-          return false;
-        }
+        mask |= 1 << j;
       }
     }
   }
-  return true;
+  return mask;
 }
 
 const int CountBits(int num) {
@@ -84,8 +83,10 @@ int main() {
         if (!ValidArrange(j, i)) {
           continue;
         }
+
+        const int mask = MakeValidMask(j);
         for (int k = 0; k < dp_max; ++k) {
-          if (dp[i - 1][k] == INT_MIN || !ValidLastArrange(j, k)) {
+          if (dp[i - 1][k] == INT_MIN || mask & k) {
             continue;
           }
 
