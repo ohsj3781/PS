@@ -1,56 +1,47 @@
-#include <cmath>
 #include <iostream>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
+std::vector<int> sets;
+std::vector<bool> visited;
 std::vector<std::vector<int>> routes;
-std::vector<std::vector<int>> parents;
-std::vector<int> level;
+std::vector<std::vector<std::pair<int, int>>> queries;
+std::vector<int> ans;
 
-void InitTree(const int now, const int parent) {
-    for (int i = 1; i < parents[now].size(); ++i) {
-        parents[now][i] = parents[parents[now][i - 1]][i - 1];
+const int GetSet(const int now) {
+    if (sets[now] == now) {
+        return now;
     }
+    return sets[now] = GetSet(sets[now]);
+}
 
-    for (int i = 0; i < routes[now].size(); ++i) {
-        const int child = routes[now][i];
-        if (routes[now][i] ^ parent) {
-            level[child] = level[now] + 1;
-            parents[child][0] = now;
-            InitTree(child, now);
-        }
-    }
+void UnionSet(const int left, const int right) {
+    sets[GetSet(right)] = GetSet(left);
     return;
 }
 
-const int LCA(int left, int right) {
-    if (left == 1 || right == 1) {
-        return 1;
-    }
+void Tarjan(const int now, const int parent) {
+    sets[now] = now;
 
-    if (level[left] < level[right]) {
-        std::swap(left, right);
-    }
-
-    if (level[left] != level[right]) {
-        for (int i = parents[left].size() - 1; i >= 0; --i) {
-            if (level[parents[left][i]] >= level[right]) {
-                left = parents[left][i];
-            }
+    for (int i = 0; i < routes[now].size(); ++i) {
+        const int child = routes[now][i];
+        if (child ^ parent) {
+            Tarjan(child, now);
+            UnionSet(now, child);
         }
     }
 
-    int ret = left;
-    if (left != right) {
-        for (int i = parents[left].size() - 1; i >= 0; --i) {
-            if (parents[left][i] != parents[right][i]) {
-                left = parents[left][i];
-                right = parents[right][i];
-            }
-            ret = parents[left][i];
+    visited[now] = true;
+
+    for (int i = 0; i < queries[now].size(); ++i) {
+        const auto &query = queries[now][i];
+        if (visited[query.first]) {
+            ans[query.second] = GetSet(query.first) + 1;
         }
     }
 
-    return ret;
+    return;
 }
 
 int main() {
@@ -60,28 +51,39 @@ int main() {
     int N;
     std::cin >> N;
 
-    routes.assign(N + 1, std::vector<int>());
-    parents.assign(N + 1, std::vector<int>(std::floor(std::log2(N) + 1)));
-    level.assign(N + 1, 0);
+    sets.assign(N, -1);
+    visited.assign(N, false);
+    routes.assign(N, std::vector<int>());
+    queries.assign(N, std::vector<std::pair<int, int>>());
 
     for (int i = 0; i < N - 1; ++i) {
         int a, b;
         std::cin >> a >> b;
+        --a;
+        --b;
+
         routes[a].push_back(b);
         routes[b].push_back(a);
     }
 
-    level[1] = 1;
-    InitTree(1, 0);
-
     int M;
     std::cin >> M;
 
-    for (int i = 0; i < M; ++i) {
-        int left, right;
-        std::cin >> left >> right;
+    ans.assign(M, -1);
 
-        std::cout << LCA(left, right) << "\n";
+    for (int i = 0; i < M; ++i) {
+        int a, b;
+        std::cin >> a >> b;
+        --a;
+        --b;
+        queries[a].push_back({b, i});
+        queries[b].push_back({a, i});
+    }
+
+    Tarjan(0, -1);
+
+    for (int i = 0; i < ans.size(); ++i) {
+        std::cout << ans[i] << "\n";
     }
 
     return 0;
