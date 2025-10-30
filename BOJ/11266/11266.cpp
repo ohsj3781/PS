@@ -1,40 +1,38 @@
+#include <climits>
 #include <iostream>
-#include <queue>
 #include <vector>
 
-std::vector<std::vector<int>> routes;
-std::vector<int> sets;
-std::vector<int> merged_set_size;
-std::vector<int> origin_merged_set_size;
+constexpr int INF = INT_MAX >> 1;
 
-void InitSet() {
-    for (int i = 0; i < sets.size(); ++i) {
-        sets[i] = i;
+int cnt_ans = 0;
+int visit_seq;
+std::vector<int> visit;
+std::vector<std::vector<int>> edges;
+std::vector<bool> is_cut_vertex;
+
+const int DFS(const int now, const bool root) {
+    int ret = visit[now] = visit_seq++;
+
+    int child = 0;
+    for (int i = 0; i < edges[now].size(); ++i) {
+        const int next = edges[now][i];
+        if (visit[next] == -1) {
+            ++child;
+            const int subtree = DFS(next, false);
+            if (!is_cut_vertex[now] && !root && subtree >= visit[now]) {
+                is_cut_vertex[now] = true;
+                ++cnt_ans;
+            }
+            ret = std::min(ret, subtree);
+        } else {
+            ret = std::min(ret, visit[next]);
+        }
     }
-    std::fill(merged_set_size.begin(), merged_set_size.end(), 1);
-    return;
-}
-
-const int GetSet(const int set) {
-    if (set == sets[set]) {
-        return set;
+    if (!is_cut_vertex[now] && root && child > 1) {
+        is_cut_vertex[now] = true;
+        ++cnt_ans;
     }
-    return sets[set] = GetSet(sets[set]);
-}
-
-void MergeSet(int lset, int rset) {
-    lset = GetSet(lset);
-    rset = GetSet(rset);
-
-    if (lset > rset) {
-        std::swap(lset, rset);
-    }
-
-    sets[rset] = lset;
-    merged_set_size[lset] += merged_set_size[rset];
-    merged_set_size[rset] = 0;
-
-    return;
+    return ret;
 }
 
 int main() {
@@ -44,75 +42,32 @@ int main() {
     int V, E;
     std::cin >> V >> E;
 
-    routes.assign(V, std::vector<int>());
+    visit.assign(V, -1);
+    edges.assign(V, std::vector<int>());
+    is_cut_vertex.assign(V, false);
+
     for (int i = 0; i < E; ++i) {
-        int A, B;
-        std::cin >> A >> B;
-        --A, --B;
+        int n0, n1;
+        std::cin >> n0 >> n1;
+        --n0, --n1;
 
-        routes[A].push_back(B);
-        routes[B].push_back(A);
+        edges[n0].push_back(n1);
+        edges[n1].push_back(n0);
     }
 
-    sets.assign(V, 0);
-    merged_set_size.assign(V, 1);
-    InitSet();
-
-    origin_merged_set_size.assign(V, 0);
-
     for (int i = 0; i < V; ++i) {
-        if (GetSet(i) != i) {
+        if (visit[i] != -1) {
             continue;
         }
-        std::queue<int> q;
-        q.push(i);
-        while (!q.empty()) {
-            const int now = q.front();
-            q.pop();
-            for (int j = 0; j < routes[now].size(); ++j) {
-                if (GetSet(now) ^ GetSet(routes[now][j])) {
-                    MergeSet(now, routes[now][j]);
-                    q.push(routes[now][j]);
-                }
-            }
-        }
+        visit_seq = 0;
+        DFS(i, true);
     }
 
+    std::cout << cnt_ans << "\n";
     for (int i = 0; i < V; ++i) {
-        origin_merged_set_size[i] = merged_set_size[GetSet(i)];
-    }
-
-    std::vector<int> ans;
-
-    for (int i = 0; i < V; ++i) {
-        if (routes[i].empty()) {
-            continue;
+        if (is_cut_vertex[i]) {
+            std::cout << i + 1 << " ";
         }
-        InitSet();
-        std::queue<int> q;
-        q.push(routes[i].front());
-
-        while (!q.empty()) {
-            const int now = q.front();
-            q.pop();
-            for (int j = 0; j < routes[now].size(); ++j) {
-                if (routes[now][j] ^ i &&
-                    GetSet(now) ^ GetSet(routes[now][j])) {
-                    MergeSet(now, routes[now][j]);
-                    q.push(routes[now][j]);
-                }
-            }
-        }
-
-        if (origin_merged_set_size[i] - 1 !=
-            merged_set_size[GetSet(routes[i].front())]) {
-            ans.push_back(i + 1);
-        }
-    }
-
-    std::cout << ans.size() << "\n";
-    for (int i = 0; i < ans.size(); ++i) {
-        std::cout << ans[i] << " ";
     }
 
     return 0;
