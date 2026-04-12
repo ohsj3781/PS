@@ -1,3 +1,4 @@
+// BOJ 1041 https://www.acmicpc.net/problem/6549
 #include <algorithm>
 #include <iostream>
 #include <numeric>
