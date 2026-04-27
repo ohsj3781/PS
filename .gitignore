@@ -5,3 +5,5 @@
 *.pdb
 **/*.out
 **/Makefile
+**/input.txt
+**/output.txt
